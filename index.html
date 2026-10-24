@@ -877,14 +877,14 @@ table.dt tr:hover td{background:#EBF0F8}
 
   <!-- Filter bar -->
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-    <select id="sf-sport" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
+    <select id="sf-sport" autocomplete="off" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
       <option value="" selected>All sports</option>
       <option value="Basketball">Basketball</option><option value="Fencing">Fencing</option><option value="Tennis">Tennis</option><option value="Volleyball">Volleyball</option><option value="Athletics">Athletics</option>
     </select>
-    <select id="sf-coach" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
+    <select id="sf-coach" autocomplete="off" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
       <option value="">All coaches</option>
     </select>
-    <select id="sf-week" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
+    <select id="sf-week" autocomplete="off" onchange="renderSessionFiches()" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
       <option value="">All weeks</option>
     </select>
     <button onclick="loadSessionFiches()" style="padding:7px 16px;background:var(--gold);color:var(--navy);border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">↻ Refresh</button>
@@ -974,10 +974,16 @@ function goView(id,el){
   if(id==='staff') renderAllStaff();
   if(id==='season') renderSeasonCalendar();
   if(id==='sessions'){
+    // Reset immediately AND after browser autocomplete, then load
     document.getElementById('sf-sport').value = '';
     document.getElementById('sf-coach').value = '';
     document.getElementById('sf-week').value = '';
-    loadSessionFiches();
+    setTimeout(()=>{
+      document.getElementById('sf-sport').value = '';
+      document.getElementById('sf-coach').value = '';
+      document.getElementById('sf-week').value = '';
+      loadSessionFiches();
+    }, 50);
   }
 }
 
@@ -1773,11 +1779,13 @@ async function loadSessionFiches(){
     allSessionFiches = data || [];
     console.log('[MIDAN] session_logs loaded:', allSessionFiches.length, allSessionFiches.length ? allSessionFiches[0] : 'empty');
     populateSessionFilters();
-    // Force reset all filters before rendering
-    document.getElementById('sf-sport').value = '';
-    document.getElementById('sf-coach').value = '';
-    document.getElementById('sf-week').value = '';
-    renderSessionFiches();
+    // Force reset — setTimeout ensures browser autocomplete cannot override
+    setTimeout(()=>{
+      document.getElementById('sf-sport').value = '';
+      document.getElementById('sf-coach').value = '';
+      document.getElementById('sf-week').value = '';
+      renderSessionFiches();
+    }, 0);
   } catch(e) {
     console.error('[MIDAN Session Log] load error:', e);
     document.getElementById('sf-body').innerHTML = '<tr><td colspan="11" style="color:#E74C3C;padding:16px;font-weight:600">❌ Erreur : '+esc(e.message)+'</td></tr>';

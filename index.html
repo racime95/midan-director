@@ -891,6 +891,9 @@ table.dt tr:hover td{background:#EBF0F8}
     <span id="sf-count" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
   </div>
 
+  <!-- Debug panel — visible si problème -->
+  <div id="sf-debug" style="margin-bottom:12px"></div>
+
   <!-- KPI summary row -->
   <div class="stat-row c4" id="sf-kpi-row" style="margin-bottom:16px"></div>
 
@@ -1777,7 +1780,16 @@ async function loadSessionFiches(){
       .limit(300);
     if(error) throw error;
     allSessionFiches = data || [];
-    console.log('[MIDAN] session_logs loaded:', allSessionFiches.length, allSessionFiches.length ? allSessionFiches[0] : 'empty');
+    // DEBUG PANEL — affiche les données brutes dans la page
+    const dbg = document.getElementById('sf-debug');
+    if(dbg){
+      if(allSessionFiches.length === 0){
+        dbg.innerHTML = '<div style="background:#FDECEA;padding:10px;border-radius:6px;font-size:12px"><strong>⚠ Supabase a répondu mais 0 lignes retournées.</strong> Vérifier RLS ou la table session_logs.</div>';
+      } else {
+        const s0 = allSessionFiches[0];
+        dbg.innerHTML = '<div style="background:#D4EDE1;padding:10px;border-radius:6px;font-size:12px"><strong>✅ '+allSessionFiches.length+' session(s) chargée(s).</strong> Première : coach_id=<b>'+s0.coach_id+'</b> sport=<b>'+JSON.stringify(s0.sport)+'</b> session_date=<b>'+s0.session_date+'</b></div>';
+      }
+    }
     populateSessionFilters();
     // Force reset — setTimeout ensures browser autocomplete cannot override
     setTimeout(()=>{
@@ -1806,6 +1818,13 @@ function populateSessionFilters(){
 }
 
 function renderSessionFiches(){
+  try { _renderSessionFiches(); }
+  catch(e){
+    const tbody = document.getElementById('sf-body');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="11" style="color:#E74C3C;padding:16px;font-weight:600">❌ Erreur rendu : '+e.message+'<br><small>'+e.stack+'</small></td></tr>';
+  }
+}
+function _renderSessionFiches(){
   const sport  = document.getElementById('sf-sport').value;
   const coach  = document.getElementById('sf-coach').value;
   const week   = document.getElementById('sf-week').value;

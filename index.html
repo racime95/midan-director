@@ -975,8 +975,9 @@ function goView(id,el){
   if(id==='season') renderSeasonCalendar();
   if(id==='sessions'){
     document.getElementById('sf-sport').value = '';
-    if(allSessionFiches.length===0) loadSessionFiches();
-    else renderSessionFiches();
+    document.getElementById('sf-coach').value = '';
+    document.getElementById('sf-week').value = '';
+    loadSessionFiches();
   }
 }
 
@@ -1770,7 +1771,12 @@ async function loadSessionFiches(){
       .limit(300);
     if(error) throw error;
     allSessionFiches = data || [];
+    console.log('[MIDAN] session_logs loaded:', allSessionFiches.length, allSessionFiches.length ? allSessionFiches[0] : 'empty');
     populateSessionFilters();
+    // Force reset all filters before rendering
+    document.getElementById('sf-sport').value = '';
+    document.getElementById('sf-coach').value = '';
+    document.getElementById('sf-week').value = '';
     renderSessionFiches();
   } catch(e) {
     console.error('[MIDAN Session Log] load error:', e);
@@ -1797,9 +1803,10 @@ function renderSessionFiches(){
   const week   = document.getElementById('sf-week').value;
 
   const filtered = allSessionFiches.filter(s=>{
-    if(sport && s.sport && s.sport !== sport) return false;
-    if(coach && s.coach_id && s.coach_id !== coach) return false;
-    if(week  && s.week_num && String(s.week_num) !== week) return false;
+    // sport filter: skip only if sport field exists AND doesn't match
+    if(sport && s.sport != null && s.sport !== sport) return false;
+    if(coach && s.coach_id !== coach) return false;
+    if(week  && s.week_num != null && String(s.week_num) !== week) return false;
     return true;
   });
 

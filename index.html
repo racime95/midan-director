@@ -1291,7 +1291,7 @@ function selectSport(sport){
 function openSportSessionLog(){
   const coach = ALL.coaches.find(c => c.sport === selectedSport);
   if(!coach){ alert('No coach found for '+selectedSport); return; }
-  const base = 'https://racime95.github.io/midan-director/dashboard_sessions.html';';
+  const base = 'https://racime95.github.io/midan-director/dashboard_sessions.html';
   const params = new URLSearchParams({
     coach: coach.id,
     sport: coach.sport,

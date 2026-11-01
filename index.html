@@ -396,7 +396,7 @@ table.dt tr:hover td{background:#EBF0F8}
   <div class="nav-label">Monitoring</div>
   <div class="nav-item" onclick="goView('weekly',this)"><span class="nav-icon">📝</span>Weekly Follow-Up</div>
   <div class="nav-item" onclick="goView('monthly',this)"><span class="nav-icon">📈</span>Monthly Reports</div>
-  <div class="nav-item" onclick="goView('sessions',this)"><span class="nav-icon">📋</span>Session Log</div>
+  <div class="nav-item" onclick="openSessionDashboard()"><span class="nav-icon">📋</span>Session Dashboard</div>
   <div class="nav-item" onclick="goView('athletes',this)"><span class="nav-icon">👩‍🏃</span>All Athletes</div>
   <div class="nav-item" onclick="goView('staff',this)"><span class="nav-icon">🧑‍💼</span>All Staff</div>
 </div>
@@ -1283,6 +1283,13 @@ function selectSport(sport){
     <td style="font-size:11px;max-width:180px">${w.coach_notes||'—'}</td>
     <td><span class="chip ${w.status==='done'?'badge-ok':w.status==='miss'?'badge-crit':'badge-warn'}">${{done:'✓ Done',part:'~ Partial',miss:'✗ Missed',rest:'⏸ Rest'}[w.status]||'—'}</span></td>
   </tr>`).join(''):'<tr><td colspan="9" class="empty">No weekly entries yet.</td></tr>';
+}
+
+// ══════════════════════════════════════════════════
+// SESSION DASHBOARD (nav menu)
+// ══════════════════════════════════════════════════
+function openSessionDashboard(){
+  window.open('https://racime95.github.io/midan-director/dashboard_sessions.html', '_blank');
 }
 
 // ══════════════════════════════════════════════════

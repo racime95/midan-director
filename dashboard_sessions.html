@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session Dashboard — MIDAN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1"></script>
+<style>
+:root {
+  --navy: #0d1b2a;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --bg: #f4f5f7;
+  --white: #ffffff;
+  --text: #1a1a2e;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --red: #ef4444;
+  --green: #22c55e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+.top-bar {
+  background: var(--navy);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.top-bar .logo { color: white; font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+.top-bar .logo span { color: var(--gold); }
+.top-bar .sub { color: #94a3b8; font-size: 13px; }
+.btn-back {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-back:hover { background: var(--gold-light); }
+
+/* MAIN */
+.main { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+
+/* FILTERS */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.filters select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+}
+.btn-refresh {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-refresh:hover { background: var(--gold-light); }
+.count-badge {
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* KPI CARDS */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 500px) { .kpi-row { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+}
+.kpi-card.highlight {
+  background: var(--navy);
+  color: white;
+}
+.kpi-value {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--gold);
+}
+.kpi-card:not(.highlight) .kpi-value { color: var(--navy); }
+.kpi-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.kpi-card.highlight .kpi-label { color: #94a3b8; }
+
+/* TABLE */
+.table-wrap {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.table-header {
+  background: var(--navy);
+  padding: 14px 20px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+}
+.table-scroll { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 900px;
+}
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody td {
+  padding: 11px 14px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.coach-name { font-weight: 600; }
+.sport-ctx { color: var(--gold); font-size: 12px; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.badge.comp { background: #fef3c7; color: #92400e; }
+.badge.rest { background: #dcfce7; color: #166534; }
+.obj-good { color: var(--green); font-weight: 600; }
+.obj-warn { color: var(--red); font-weight: 600; }
+.obj-none { color: var(--muted); }
+.detail-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.detail-btn:hover { border-color: var(--gold); color: var(--gold); }
+.detail-row { display: none; }
+.detail-row td {
+  background: #f8fafc;
+  padding: 12px 20px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: normal;
+}
+.detail-inner {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 12px;
+}
+.detail-block strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 3px; }
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="logo">MID<span>AN</span> <span style="font-size:13px;font-weight:400;color:#94a3b8">Session Dashboard</span></div>
+  </div>
+  <button class="btn-back" onclick="goBack()">← MIDAN</button>
+</div>
+
+<div class="main">
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <select id="f-sport" onchange="applyFilters()">
+      <option value="">All sports</option>
+      <option>Athletics</option>
+      <option>Basketball</option>
+      <option>Fencing</option>
+      <option>Tennis</option>
+      <option>Volleyball</option>
+    </select>
+    <select id="f-coach" onchange="applyFilters()">
+      <option value="">All coaches</option>
+    </select>
+    <select id="f-week" onchange="applyFilters()">
+      <option value="">All weeks</option>
+    </select>
+    <button class="btn-refresh" onclick="loadData()">↻ Refresh</button>
+    <span class="count-badge" id="count-badge"></span>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-row">
+    <div class="kpi-card highlight">
+      <div class="kpi-value" id="kpi-sessions">—</div>
+      <div class="kpi-label">Sessions logged</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-athletes">—</div>
+      <div class="kpi-label">Athlete appearances</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-obj">—</div>
+      <div class="kpi-label">Avg obj L2 rate</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-self">—</div>
+      <div class="kpi-label">Avg self-score</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <div class="table-header">Session Log</div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Coach</th>
+            <th>Sport / Group</th>
+            <th>Week</th>
+            <th>Phase</th>
+            <th>Duration</th>
+            <th>Athletes</th>
+            <th>Obj L2</th>
+            <th>Self-Score</th>
+            <th>RPE</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="session-tbody">
+          <tr><td colspan="11" class="empty-state">Loading sessions…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sjmqqjvvomdpewkhosma.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqbXFxanZ2b21kcGV3a2hvc21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzODM4NjksImV4cCI6MjEwNDk1OTg2OX0.gsU-oIz59A9l_Z5A0Pf5Rny4e04ehHeqGUSRJtHriS4';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const params = new URLSearchParams(location.search);
+const CTX = {
+  coach: params.get('coach') || '',
+  sport: params.get('sport') || '',
+  planContext: params.get('planContext') || ''
+};
+
+let allSessions = [];
+let filtered = [];
+
+function goBack(){
+  if(window.opener && !window.opener.closed) window.close();
+  else location.href = 'index.html';
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function phaseBadge(p){
+  if(!p) return '<span class="obj-none">—</span>';
+  const cls = (p||'').toUpperCase().includes('COMP') ? 'comp' : (p||'').toUpperCase().includes('REST') ? 'rest' : '';
+  return `<span class="badge ${cls}">${p}</span>`;
+}
+
+function objCell(achieved, total){
+  if(!total) return '<span class="obj-none">—</span>';
+  const cls = achieved >= total ? 'obj-good' : achieved > 0 ? 'obj-warn' : 'obj-warn';
+  return `<span class="${cls}">${achieved}/${total}</span>`;
+}
+
+async function loadData(){
+  document.getElementById('session-tbody').innerHTML = '<tr><td colspan="11" class="empty-state">Loading sessions…</td></tr>';
+  let q = sb.from('session_logs').select('*').order('session_date',{ascending:false});
+  if(CTX.coach) q = q.eq('coach_id', CTX.coach);
+  const {data, error} = await q.limit(200);
+  if(error){
+    document.getElementById('session-tbody').innerHTML = `<tr><td colspan="11" class="empty-state" style="color:red">Error: ${error.message}</td></tr>`;
+    return;
+  }
+  allSessions = data || [];
+  buildCoachFilter();
+  buildWeekFilter();
+  applyFilters();
+}
+
+function buildCoachFilter(){
+  const coaches = [...new Set(allSessions.map(s=>s.coach_name||s.coach_id).filter(Boolean))].sort();
+  const sel = document.getElementById('f-coach');
+  sel.innerHTML = '<option value="">All coaches</option>' + coaches.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(CTX.coach){
+    const match = coaches.find(c => c === CTX.coach || c.toLowerCase().includes(CTX.coach.toLowerCase()));
+    if(match) sel.value = match;
+  }
+}
+
+function buildWeekFilter(){
+  const weeks = [...new Set(allSessions.map(s=>s.week_num).filter(Boolean))].sort((a,b)=>a-b);
+  const sel = document.getElementById('f-week');
+  sel.innerHTML = '<option value="">All weeks</option>' + weeks.map(w=>`<option value="${w}">W${w}</option>`).join('');
+}
+
+function applyFilters(){
+  const sport = document.getElementById('f-sport').value;
+  const coach = document.getElementById('f-coach').value;
+  const week = document.getElementById('f-week').value;
+  filtered = allSessions.filter(s=>{
+    if(sport && s.sport !== sport) return false;
+    if(coach && (s.coach_name||s.coach_id) !== coach) return false;
+    if(week && String(s.week_num) !== String(week)) return false;
+    return true;
+  });
+  renderKPIs();
+  renderTable();
+}
+
+function renderKPIs(){
+  const n = filtered.length;
+  const athletes = filtered.reduce((a,s)=>a+(parseInt(s.athletes_present)||0),0);
+  const withObj = filtered.filter(s=>s.obj2_total>0);
+  const objRate = withObj.length ? Math.round(withObj.reduce((a,s)=>a+(s.obj2_achieved||0),0)/withObj.reduce((a,s)=>a+(s.obj2_total||0),0)*100) : null;
+  const withSelf = filtered.filter(s=>s.self_score!=null);
+  const avgSelf = withSelf.length ? (withSelf.reduce((a,s)=>a+s.self_score,0)/withSelf.length).toFixed(1) : null;
+
+  document.getElementById('kpi-sessions').textContent = n;
+  document.getElementById('kpi-athletes').textContent = athletes || '—';
+  document.getElementById('kpi-obj').textContent = objRate !== null ? objRate+'%' : '—';
+  document.getElementById('kpi-self').textContent = avgSelf !== null ? avgSelf+'/30' : '—';
+  document.getElementById('count-badge').textContent = n + ' session' + (n!==1?'s':'');
+}
+
+function renderTable(){
+  const tbody = document.getElementById('session-tbody');
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No sessions found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map((s,i)=>{
+    const ctx = [s.sport, s.discipline, s.age_group].filter(Boolean).join(' › ');
+    const rpe = s.self_scores ? (() => { try { const sc = JSON.parse(s.self_scores); return sc.overall||'—'; } catch(e){ return '—'; } })() : '—';
+    const detailId = 'det-'+i;
+    const notes = s.fb_coach_obs || s.self_strengths || '—';
+    const improve = s.self_improve || '—';
+    const objArr = s.objectives_l2 ? (() => { try { return JSON.parse(s.objectives_l2).filter(o=>o.obj); } catch(e){ return []; } })() : [];
+    return `
+    <tr>
+      <td>${fmtDate(s.session_date)}</td>
+      <td class="coach-name">${s.coach_name||s.coach_id||'—'}</td>
+      <td><div class="sport-ctx">${ctx||s.sport||'—'}</div></td>
+      <td>W${s.week_num||'?'}</td>
+      <td>${phaseBadge(s.phase)}</td>
+      <td>${s.duration_min ? s.duration_min+'min' : '—'}</td>
+      <td>${s.athletes_present||'—'}</td>
+      <td>${objCell(s.obj2_achieved||0, s.obj2_total||0)}</td>
+      <td>${s.self_score!=null ? s.self_score+'/30' : '—'}</td>
+      <td>${rpe!=='—' ? rpe : '—'}</td>
+      <td><button class="detail-btn" onclick="toggleDetail('${detailId}',this)">▼</button></td>
+    </tr>
+    <tr class="detail-row" id="${detailId}">
+      <td colspan="11">
+        <div class="detail-inner">
+          <div class="detail-block">
+            <strong>Session objectives (L2)</strong>
+            ${objArr.length ? objArr.map(o=>`<div>• ${o.obj||''}</div>`).join('') : '<div>—</div>'}
+          </div>
+          <div class="detail-block">
+            <strong>Coach observations</strong>
+            <div>${notes}</div>
+          </div>
+          <div class="detail-block">
+            <strong>To improve</strong>
+            <div>${improve}</div>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleDetail(id, btn){
+  const row = document.getElementById(id);
+  const open = row.style.display === 'table-row';
+  row.style.display = open ? 'none' : 'table-row';
+  btn.textContent = open ? '▼' : '▲';
+}
+
+// Pre-set sport filter from URL
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(CTX.sport) document.getElementById('f-sport').value = CTX.sport;
+  loadData();
+});
+</script>
+</body>
+</html>

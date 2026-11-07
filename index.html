@@ -651,7 +651,7 @@ table.dt tr:hover td{background:#EBF0F8}
     <div class="dp-head"><span class="dp-title">Staff Registry</span></div>
     <div class="tbl-wrap dp-body" style="padding:0">
       <table class="dt">
-        <thead><tr><th>Sport</th><th>Name</th><th>Role</th><th>Licence</th><th>Federation</th><th>Lic. Expiry</th><th>First Aid</th><th>Safeguarding</th><th>Contract End</th><th>Email</th></tr></thead>
+        <thead><tr><th>Sport</th><th>Name</th><th>Role</th><th>Licence</th><th>Federation</th><th>Lic. Expiry</th><th>First Aid</th><th>Safeguarding</th><th>Contract End</th><th>Email</th><th>Arrival</th><th>Program Area</th></tr></thead>
         <tbody id="all-staff-body"></tbody>
       </table>
     </div>
@@ -1437,7 +1437,7 @@ function renderAllStaff(){
   if(expiring.length){al.style.display='block';al.innerHTML=`<strong>${expiring.length} staff member(s)</strong> with licence or certification expiring within 90 days: ${expiring.map(s=>s.last_name+' '+s.first_name).join(', ')}.`;}
   else al.style.display='none';
   const tbody=document.getElementById('all-staff-body');
-  if(!list.length){tbody.innerHTML='<tr><td colspan="10" class="empty">No staff records yet.</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No staff records yet.</td></tr>';return;}
   tbody.innerHTML=list.map(s=>{
     const c=coachMap[s.coach_id]; const sport=c?c.sport:'—';
     return`<tr>
@@ -1451,6 +1451,8 @@ function renderAllStaff(){
       <td><span class="chip" style="background:${s.safeguarding==='Yes'?'var(--lgreen)':'var(--lred)'};color:${s.safeguarding==='Yes'?'var(--green)':'var(--red)'}">${s.safeguarding||'—'}</span></td>
       <td style="font-size:11px;color:${expColor(s.contract_end)}">${s.contract_end||'—'}</td>
       <td style="font-size:11px">${s.work_email||'—'}</td>
+      <td style="font-size:11px">${s.arrival_date||'—'}</td>
+      <td style="font-size:11px">${s.program_area||'—'}</td>
     </tr>`;
   }).join('');
 }
